@@ -1,3 +1,6 @@
+Pierre Miroite OCRES TD4
+
+
 # 19-20_TWOIng4_TP4 : API
 
 A lire impérativement avant de commencer quoi que ce soit, ce sont les règles que vous devrez appliquer tout au long du semestre:
