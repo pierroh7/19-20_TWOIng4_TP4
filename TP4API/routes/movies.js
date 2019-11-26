@@ -1,10 +1,37 @@
 var express = require('express');
 var router = express.Router();
 
-const _ = require('lodash');
+const _ = require('lodash'); //Permet les select
+const axios = require('axios')
+
+const API_URL = 'http://www.omdbapi.com/';
+const API_KEY = '5f54c43f';
+
+//Movie template
+/*
+ {
+  id: String,
+  movie: String,
+  yearOfRelease: Number,
+  duration: Number // en minutes,
+  actors: [String, String],
+  poster: String // lien vers une image d'affiche,
+  boxOffice: Number // en USD$,
+  rottenTomatoesScore: Number
+ }
+*/
 
 //Data array
-let movies = [];
+let movies = [{
+    id: "default_movie",
+    movie: "Fil Défaut",
+    yearOfRelease: "2000",
+    duration: "200",// en minutes
+    actors: ["John", "Johnny"],
+    poster: "img_default", // lien vers une image d'affiche
+    BoxOffice: "300 000", // en USD$
+    rottenTomatoesScore: "0"
+}];
 
 /*GET*/
 router.get('/', (req, res) => {
@@ -15,33 +42,65 @@ router.get('/', (req, res) => {
 /*GET One*/ 
 router.get('/:id', (req, res) => {
     //id in params
-    const { id } = req.params;  //paramètre requis
-    //Find movies
+    const { id } = req.params;  //paramètre requis, params c'est dans Postman
+    //Find movie
     const chosenMovie = _.find(movies, ["id", id]);
-    //Return movies
-    res.status(200).json({
-        message: 'Movies found !',
-        chosenMovie
-    });
+    //Return movie
+    if(!chosenMovie){
+        res.status(404).json({
+            message: 'Movie not found !',
+            chosenMovie
+        });
+    }else{
+        res.status(200).json({
+            message: 'Movie found !',
+            chosenMovie
+        });
+    }
+
 });
 
-/*POST (Add)*/
-router.post('/', (req, res) => {
-    //Get data
-    const {movie} = req.body;
+/*PUT (Add)*/
+router.put('/:movie_name', (req, res) => {
+
+    //Get name to add
+    const { movie_name } = req.params;
     //Create new unique id
     const id = _.uniqueId();
-    //Insert in Array
-    movies.push({movie:movie, id:id});
+
+    //https://upmostly.com/tutorials/using-axios-with-react-api-requests
+    //http://www.omdbapi.com/?t=inception&apikey=VOTRECLEAPI
+    axios.get('${API_URL}?t={movie_name}&apikey=${API_KEY}').then((response) => {
+        //For better lisibilité
+        const data = response.data;
+
+        //Insert in Array
+        movies.push({ 
+            id: id,
+            movie: data.Title,
+            yearOfRelease : data.Year, 
+            duration : data.Runtime, 
+            actors : [data.Actors],
+            poster : data.Poster,
+            BoxOffice : data.BoxOffice,
+            rottenTomatoesScore: data.Ratings[1].Value
+        });
+
+    }).catch(error => {
+        console.log(error);
+    
+    }).finally(() =>{
+
+    });
+
     //Return message
     res.status(200).json({
-        message: '${id} has been added',
-        addedMovie: movie
+        message: '${movie_name} has been added'
     });
 });
 
-/*PUT (Update)*/
-router.put('/:id', (req, res)=> {
+/*POST (Update)*/
+router.post('/:id', (req, res)=> {
     //Get the id of the movie we want to update
     const{id} = req.params;
     //Get new data to update
@@ -54,5 +113,19 @@ router.put('/:id', (req, res)=> {
     //Return message
     res.status(200).json({
         message: 'Updated ${id} with ${user}'
+    });
+});
+
+/*DELETE*/
+router.delete('/:id', (req, res) => {
+    //Get :id of the movie to delete
+    const{id} = req.params;
+
+    //Remove from DB
+    _.remove(movies, ["id", id]);
+
+    //Return message
+    res.status(200).json({
+        message: '${id} removed'
     });
 });
