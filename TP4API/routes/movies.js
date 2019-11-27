@@ -90,30 +90,48 @@ router.put('/:movie_name', (req, res) => {
         console.log(error);
     
     }).finally(() =>{
-
+        //Return message
+        res.status(200).json({
+            message: '${movie_name} has been added'
+        });
     });
 
-    //Return message
-    res.status(200).json({
-        message: '${movie_name} has been added'
-    });
+    
 });
 
 /*POST (Update)*/
 router.post('/:id', (req, res)=> {
     //Get the id of the movie we want to update
-    const{id} = req.params;
+    const{id} = req.body;
     //Get new data to update
-    const {movie} = req.body;
+    const {new_movie_name} = req.body;
     //Find in DB
     const movieToUpdate = _.find(movies, ["id", id]);
-    //Update data
-    movieToUpdate.movie = movie;
 
-    //Return message
-    res.status(200).json({
-        message: 'Updated ${id} with ${user}'
+    //Update movie
+    axios.get('${API_URL}?t={movie_name}&apikey=${API_KEY}')..then((response) => {
+        //For better lisibilité
+        const data = response.data;
+
+        movieToUpdate.movie = new_movie_name;
+        movieToUpdate.yearOfRelease = data.Year;
+        movieToUpdate.duration= data.Runtime;
+        movieToUpdate.actors = [data.Actors];
+        movieToUpdate.poster = data.Poster;
+        movieToUpdate.BoxOffice = data.BoxOffice;
+        movieToUpdate.rottenTomatoesScore= data.Ratings[1].Value
+    
+    }).catch(error => {
+        console.log(error);
+
+    }).finally(() => {
+        //Return message
+        res.status(200).json({
+            message: 'Updated ${id} with ${new_movie_name}',
+            movieToUpdate
+        });
     });
+
 });
 
 /*DELETE*/
@@ -126,6 +144,7 @@ router.delete('/:id', (req, res) => {
 
     //Return message
     res.status(200).json({
-        message: '${id} removed'
+        message: '${id} removed',
+        movies
     });
 });
