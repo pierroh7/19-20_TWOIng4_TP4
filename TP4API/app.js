@@ -11,6 +11,18 @@ var movies = require('./routes/movies');
 
 var app = express();
 
+//ADDING MONGOOSE
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+const dbName = "my_new_dataBase";
+const dbURL = 'mongodb://localhost:27017/${dbName}';
+
+//Connecting Database
+mongoose.connect(dbURL, {
+  useNewUrlParser: true
+});
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
